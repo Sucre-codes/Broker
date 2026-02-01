@@ -37,7 +37,7 @@ const investmentSchema = new mongoose.Schema({
   timeframeWeeks: {
     type: Number,
     required: [true, 'Please provide investment timeframe'],
-    min: [2, 'Minimum investment period is 2 weeks']
+    min: [1, 'Minimum investment period is a weeks']
   },
   
   // ROI Calculation
@@ -64,7 +64,7 @@ const investmentSchema = new mongoose.Schema({
   // Investment Status
   status: {
     type: String,
-    enum: ['active', 'completed', 'withdrawn'],
+    enum: ['pending', 'active', 'completed', 'withdrawn','rejected'],
     default: 'active'
   },
   
@@ -161,22 +161,28 @@ investmentSchema.methods.updateCurrentValue = function() {
   // Add slight variance based on asset type for realism
   let variance = 1;
   switch(this.assetType) {
-    case 'crypto':
+    case 'Tesla':
       // Crypto has highest volatility: ±5%
       variance = 1 + ((Math.random() - 0.5) * 0.1);
       break;
-    case 'stocks':
+    case 'SpaceX':
       // Stocks have medium-high volatility: ±3%
       variance = 1 + ((Math.random() - 0.5) * 0.06);
       break;
-    case 'business':
+    case 'The boring company':
       // Business has medium volatility: ±2%
       variance = 1 + ((Math.random() - 0.5) * 0.04);
       break;
-    case 'real-estate':
+    case 'Deepmind Technology':
       // Real estate has low volatility: ±1%
       variance = 1 + ((Math.random() - 0.5) * 0.02);
       break;
+      case 'Neuralink':
+      // Cowries have very low volatility: ±0.5%
+      variance = 1 + ((Math.random() - 0.5) * 0.01);
+      break;
+    default:
+      variance = 1;
   }
   
   // Calculate current value with variance
@@ -200,11 +206,11 @@ investmentSchema.methods.hasEnded = function() {
 };
 
 /**
- * Check if minimum 2 weeks have passed for withdrawal
+ * Check if minimum a weeks have passed for withdrawal
  */
 investmentSchema.methods.canWithdraw = function() {
   const now = new Date();
-  const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
+  const twoWeeksInMs = 7 * 24 * 60 * 60 * 1000;
   const timeSinceStart = now.getTime() - this.startDate.getTime();
   return timeSinceStart >= twoWeeksInMs;
 };

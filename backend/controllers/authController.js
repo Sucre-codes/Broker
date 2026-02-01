@@ -1,6 +1,9 @@
-const User = require('../models/User');
-const { generateToken } = require('../utils/jwt');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emails');
+/**
+ * Authentication Controller
+ * Handles HTTP requests and responses for authentication
+ */
+
+const authService = require('../services/authService');
 
 /**
  * @desc    Register new user
@@ -10,92 +13,43 @@ const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/emai
 exports.register = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+
+    // Validate input
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email already registered'
+        message: 'Please provide all required fields',
       });
     }
-    
-    // Create user
-    const user = await User.create({
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long',
+      });
+    }
+
+    const result = await authService.registerUser({
       firstName,
       lastName,
       email,
-      password
+      password,
     });
-    
-    // Generate verification token
-    const verificationToken = user.generateVerificationToken();
-    await user.save();
-    
-    // Send verification email
-    try {
-      await sendVerificationEmail(email, firstName, verificationToken);
-    } catch (error) {
-      console.error('Error sending verification email:', error);
-      // Continue even if email fails
-    }
-    
+
     res.status(201).json({
       success: true,
-      message: 'Registration successful! Please check your email to verify your account.',
+      message: result.message,
       data: {
-        userId: user._id,
-        email: user.email
-      }
+        user: result.user,
+        token: result.token,
+      },
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
-      message: 'Error creating account',
-      error: error.message
-    });
-  }
-};
-
-/**
- * @desc    Verify email
- * @route   GET /api/auth/verify-email/:token
- * @access  Public
- */
-exports.verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.params;
-    
-    // Find user with valid verification token
-    const user = await User.findOne({
-      verificationToken: token,
-      verificationTokenExpire: { $gt: Date.now() }
-    });
-    
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired verification token'
-      });
-    }
-    
-    // Mark user as verified
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    user.verificationTokenExpire = undefined;
-    await user.save();
-    
-    res.status(200).json({
-      success: true,
-      message: 'Email verified successfully! You can now login.'
-    });
-  } catch (error) {
-    console.error('Email verification error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error verifying email',
-      error: error.message
+      message: error.message || 'Registration failed',
     });
   }
 };
@@ -108,110 +62,130 @@ exports.verifyEmail = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
-    // Validate email and password
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide email and password'
-      });
-    }
-    
-    // Check for user (include password field)
-    const user = await User.findOne({ email }).select('+password');
-    
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-    
-    // Check if password matches
-    const isMatch = await user.comparePassword(password);
-    
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
-    
-    // Check if email is verified
-    if (!user.isVerified) {
-      return res.status(401).json({
-        success: false,
-        message: 'Please verify your email before logging in'
-      });
-    }
-    
-    // Check if account is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        success: false,
-        message: 'Your account has been deactivated. Please contact support.'
-      });
-    }
-    
-    // Generate token
-    const token = generateToken(user._id);
-    
+
+    const result = await authService.loginUser(email, password);
+
+    // Set cookie with token (optional, for additional security)
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: 'strict',
+    });
+
     res.status(200).json({
       success: true,
-      message: 'Login successful',
+      message: result.message,
       data: {
-        token,
-        user: {
-          id: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          totalInvested: user.totalInvested,
-          totalReturns: user.totalReturns,
-          currentBalance: user.currentBalance,
-          autoCompound: user.autoCompound
-        }
-      }
+        user: result.user,
+        token: result.token,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
+    res.status(401).json({
       success: false,
-      message: 'Error logging in',
-      error: error.message
+      message: error.message || 'Login failed',
     });
   }
 };
 
 /**
- * @desc    Get current logged in user
- * @route   GET /api/auth/me
- * @access  Private
+ * @desc    Verify email
+ * @route   GET /api/auth/verify-email/:token
+ * @access  Public
  */
-exports.getMe = async (req, res) => {
+exports.verifyEmail = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    
+    const { token } = req.params;
+
+    const result = await authService.verifyEmail(token);
+
     res.status(200).json({
       success: true,
+      message: result.message,
       data: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        totalInvested: user.totalInvested,
-        totalReturns: user.totalReturns,
-        currentBalance: user.currentBalance,
-        autoCompound: user.autoCompound,
-        createdAt: user.createdAt
-      }
+        user: result.user,
+      },
     });
   } catch (error) {
-    console.error('Get me error:', error);
+    console.error('Email verification error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Email verification failed',
+    });
+  }
+};
+
+/**
+ * @desc    Forgot password - Send reset email
+ * @route   POST /api/auth/forgot-password
+ * @access  Public
+ */
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide your email address',
+      });
+    }
+
+    const result = await authService.forgotPassword(email);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching user data',
-      error: error.message
+      message: error.message || 'Could not process request',
+    });
+  }
+};
+
+/**
+ * @desc    Reset password
+ * @route   PUT /api/auth/reset-password/:token
+ * @access  Public
+ */
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a new password',
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long',
+      });
+    }
+
+    const result = await authService.resetPassword(token, password);
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        token: result.token,
+      },
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Password reset failed',
     });
   }
 };
@@ -224,78 +198,75 @@ exports.getMe = async (req, res) => {
 exports.resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
-    
-    const user = await User.findOne({ email });
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-    
-    if (user.isVerified) {
+
+    if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Email is already verified'
+        message: 'Please provide your email address',
       });
     }
-    
-    // Generate new verification token
-    const verificationToken = user.generateVerificationToken();
-    await user.save();
-    
-    // Send verification email
-    await sendVerificationEmail(email, user.firstName, verificationToken);
-    
+
+    const result = await authService.resendVerification(email);
+
     res.status(200).json({
       success: true,
-      message: 'Verification email sent successfully'
+      message: result.message,
     });
   } catch (error) {
     console.error('Resend verification error:', error);
-    res.status(500).json({
+    res.status(400).json({
       success: false,
-      message: 'Error sending verification email',
-      error: error.message
+      message: error.message || 'Could not resend verification email',
     });
   }
 };
 
 /**
- * @desc    Update user profile
- * @route   PUT /api/auth/update-profile
+ * @desc    Get current logged in user
+ * @route   GET /api/auth/me
  * @access  Private
  */
-exports.updateProfile = async (req, res) => {
+exports.getMe = async (req, res) => {
   try {
-    const { firstName, lastName, autoCompound } = req.body;
-    
-    const user = await User.findById(req.user.id);
-    
-    if (firstName) user.firstName = firstName;
-    if (lastName) user.lastName = lastName;
-    if (typeof autoCompound !== 'undefined') user.autoCompound = autoCompound;
-    
-    await user.save();
-    
+    const user = await authService.getCurrentUser(req.user._id);
+
     res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
       data: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        autoCompound: user.autoCompound
-      }
+        user,
+      },
     });
   } catch (error) {
-    console.error('Update profile error:', error);
+    console.error('Get current user error:', error);
+    res.status(404).json({
+      success: false,
+      message: error.message || 'User not found',
+    });
+  }
+};
+
+/**
+ * @desc    Logout user
+ * @route   POST /api/auth/logout
+ * @access  Private
+ */
+exports.logout = async (req, res) => {
+  try {
+    // Clear cookie
+    res.cookie('token', '', {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error updating profile',
-      error: error.message
+      message: 'Logout failed',
     });
   }
 };
