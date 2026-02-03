@@ -13,18 +13,18 @@ exports.createInvestment = async (req, res) => {
     const { assetType, plan, amount, timeframeWeeks, paymentMethod, transactionId } = req.body;
     
     // Validate minimum amount
-    if (amount < 10) {
+    if (amount < 100) {
       return res.status(400).json({
         success: false,
-        message: 'Minimum investment amount is $10'
+        message: 'Minimum investment amount is $100'
       });
     }
     
     // Validate minimum timeframe
-    if (timeframeWeeks < 2) {
+    if (timeframeWeeks < 1) {
       return res.status(400).json({
         success: false,
-        message: 'Minimum investment period is 2 weeks'
+        message: 'Minimum investment period is 1 weeks'
       });
     }
     

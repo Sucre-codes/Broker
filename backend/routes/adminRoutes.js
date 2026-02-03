@@ -12,6 +12,9 @@ const { protect, authorize } = require('../middleware/auth');
 router.use(protect);
 router.use(authorize());
 
+router.post('/payments/send-details/:investmentId', adminController.sendPaymentDetails)
+
+
 // Investment management
 router.get('/investments/pending', adminController.getPendingInvestments);
 
