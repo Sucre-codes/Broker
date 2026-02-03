@@ -16,7 +16,7 @@ const investmentSchema = new mongoose.Schema({
   assetType: {
     type: String,
     required: true,
-    enum: ['Tesla', 'SpaceX', 'Deepmind Technology', 'The boring company', 'Neuralink']
+    enum: ['Tesla', 'SpaceX', 'Deepmind Technology', 'The Boring Company', 'Neuralink']
   },
 
   // VIP Plan Tiers
@@ -155,7 +155,7 @@ investmentSchema.methods.updateCurrentValue = function() {
   switch (this.assetType) {
     case 'Tesla':               variance = 1 + (Math.random() - 0.5) * 0.10; break; // ±5 %
     case 'SpaceX':              variance = 1 + (Math.random() - 0.5) * 0.06; break; // ±3 %
-    case 'The boring company':  variance = 1 + (Math.random() - 0.5) * 0.04; break; // ±2 %
+    case 'The Boring Company':  variance = 1 + (Math.random() - 0.5) * 0.04; break; // ±2 %
     case 'Deepmind Technology': variance = 1 + (Math.random() - 0.5) * 0.02; break; // ±1 %
     case 'Neuralink':           variance = 1 + (Math.random() - 0.5) * 0.01; break; // ±0.5 %
     default:                    variance = 1;
@@ -166,7 +166,7 @@ investmentSchema.methods.updateCurrentValue = function() {
   // Cap at final expected value
   const finalValue = this.amount + this.expectedROI;
   if (this.currentValue > finalValue) this.currentValue = finalValue;
-
+                     
   this.lastUpdateDate = now;
   return this.currentValue;
 };

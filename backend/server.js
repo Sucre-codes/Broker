@@ -24,12 +24,13 @@ initSocket(server);
 app.use(helmet());
 
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
+  'http://http://localhost:5173/',
+  'http://themuskfoundations.com',
   'https://elonfather.netlify.app'
 ];
 
-app.use(cors({
+ app.use(cors(
+{
   origin: function (origin, callback) {
     // allow requests with no origin (Postman, mobile apps)
     if (!origin) return callback(null, true);
@@ -41,7 +42,8 @@ app.use(cors({
     }
   },
   credentials: true,
-}));
+}                
+));                                                     
 
 
 // Body parser middleware
