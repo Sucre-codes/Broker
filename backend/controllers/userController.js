@@ -2,7 +2,7 @@
  * User Controller
  * Handles user profile management requests
  */
-
+const cloudinary = require('../config/cloudinary');
 const userService = require('../services/userService');
 
 /**
@@ -141,7 +141,7 @@ exports.uploadPictureFile = async (req, res) => {
     const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
     // Upload to Cloudinary
-    const cloudinary = require('../config/cloudinary');
+    
     const uploadResult = await cloudinary.uploadImage(base64Image, 'profile-pictures');
 
     // Update user profile

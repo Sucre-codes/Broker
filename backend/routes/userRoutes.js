@@ -18,7 +18,7 @@ router.put('/change-password', userController.changePassword);
 
 // Profile picture (two options: URL or file upload)
 router.post('/profile-picture', userController.uploadProfilePicture);
-router.post('/upload-picture', upload.single('image'), userController.uploadPictureFile);
+router.post('/upload-picture', upload.single('profilePicture'), userController.uploadPictureFile);
 
 router.delete('/account', userController.deleteAccount);
 

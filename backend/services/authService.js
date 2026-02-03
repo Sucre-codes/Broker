@@ -191,7 +191,7 @@ exports.resetPassword = async (token, newPassword) => {
     throw new Error('Invalid or expired reset token');
   }
 
-  // Set new password
+  // Set new password 
   user.password = newPassword;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;

@@ -77,6 +77,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const userRoutes = require('./routes/userRoutes');
 const transactionRoutes = require('./routes/transactionsRoutes');
 const withdrawalRoutes = require('./routes/withdrawalsRoutes');
+const investmentRoutes = require('./routes/investmentRoutes')
 
 // Mount routes
 app.use('/api/auth', authRoutes);
@@ -84,8 +85,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/withdrawals', withdrawalRoutes)
-
+app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/investments',investmentRoutes)
 
 /**
  * Cron job to update investment values daily at midnight
@@ -189,4 +190,4 @@ process.on('unhandledRejection', (err) => {
 process.on('uncaughtException', (err) => {
   console.error(`❌ Uncaught Exception: ${err.message}`);
   process.exit(1);
-});
+}); 

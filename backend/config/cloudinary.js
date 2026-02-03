@@ -53,5 +53,3 @@ exports.deleteImage = async (publicId) => {
     throw new Error('Failed to delete image');
   }
 };
-
-module.exports = cloudinary;
