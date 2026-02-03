@@ -8,16 +8,9 @@ const router = express.Router();
 const paymentController = require('../controllers/paymentController');
 const { protect } = require('../middleware/auth');
 
-// Stripe routes
-router.post('/stripe/create-intent', protect, paymentController.createStripeIntent);
 
-// Stripe webhook (must be BEFORE any body parsing middleware)
-// This route receives raw body, configured in server.js
-router.post('/webhook/stripe', express.raw({ type: 'application/json' }), paymentController.handleStripeWebhook);
+router.post('payments/initiate',paymentController.initiatePayment)
 
-// PayPal routes
-router.post('/paypal/create-order', protect, paymentController.createPayPalOrder);
-router.post('/paypal/capture/:orderId', protect, paymentController.capturePayPalOrder);
 
 // Cryptocurrency routes
 router.get('/crypto/:currency', protect, paymentController.getCryptoDetails);

@@ -2,7 +2,7 @@ const Withdrawal = require('../models/Withdrawal');
 const Investment = require('../models/Investment');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
-const { sendWithdrawalRequestEmail } = require('../utils/emails');
+const { sendWithdrawalInitiatedEmail } = require('../services/emailService');
 
 /**
  * @desc    Request withdrawal
@@ -12,64 +12,76 @@ const { sendWithdrawalRequestEmail } = require('../utils/emails');
 exports.requestWithdrawal = async (req, res) => {
   try {
     const { investmentId, withdrawalMethod, withdrawalDetails } = req.body;
-    
-    // Find investment
+
+    // ---------------------------------------------------------------------
+    // 1. Find investment
+    // ---------------------------------------------------------------------
     const investment = await Investment.findById(investmentId);
-    
+
     if (!investment) {
       return res.status(404).json({
         success: false,
-        message: 'Investment not found'
+        message: 'Investment not found',
       });
     }
-    
-    // Verify investment belongs to user
+
+    // ---------------------------------------------------------------------
+    // 2. Ownership check
+    // ---------------------------------------------------------------------
     if (investment.user.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to withdraw from this investment'
+        message: 'Not authorized to withdraw from this investment',
       });
     }
-    
-    // Check if investment is active
+
+    // ---------------------------------------------------------------------
+    // 3. Status checks
+    // ---------------------------------------------------------------------
     if (investment.status !== 'active') {
       return res.status(400).json({
         success: false,
-        message: 'Investment is not active'
+        message: 'Investment is not active',
       });
     }
-    
-    // Check if minimum 2 weeks have passed
+
     if (!investment.canWithdraw()) {
       return res.status(400).json({
         success: false,
-        message: 'Minimum withdrawal period is 2 weeks from start date'
+        message: 'Minimum withdrawal period is 2 weeks from start date',
       });
     }
-    
-    // Update investment current value
-    investment.updateCurrentValue();
+
+    // ---------------------------------------------------------------------
+    // 4. Update investment value
+    // ---------------------------------------------------------------------
+    investment.currentValue();
     await investment.save();
-    
-    // Calculate profit
+
     const profit = investment.currentValue - investment.amount;
-    
-    // Create withdrawal request
+
+    // ---------------------------------------------------------------------
+    // 5. Create withdrawal record
+    // ---------------------------------------------------------------------
     const withdrawal = await Withdrawal.create({
       user: req.user.id,
       investment: investmentId,
       amount: investment.amount,
       profit,
-      withdrawalMethod,
-      withdrawalDetails,
-      status: 'pending'
+      method: withdrawalMethod,                // <-- aligns with email
+      destination: withdrawalDetails || null,  // <-- aligns with email
+      status: 'pending',
     });
-    
-    // Update investment status
+
+    // ---------------------------------------------------------------------
+    // 6. Update investment status
+    // ---------------------------------------------------------------------
     investment.status = 'withdrawn';
     await investment.save();
-    
-    // Create transaction record
+
+    // ---------------------------------------------------------------------
+    // 7. Create transaction record
+    // ---------------------------------------------------------------------
     await Transaction.create({
       user: req.user.id,
       investment: investmentId,
@@ -77,40 +89,35 @@ exports.requestWithdrawal = async (req, res) => {
       amount: investment.currentValue,
       status: 'pending',
       paymentMethod: withdrawalMethod,
-      description: `Withdrawal request for ${investment.assetType} investment`
+      description: `Withdrawal request for ${investment.assetType} investment`,
     });
-    
-    // Get user details for email
+
+    // ---------------------------------------------------------------------
+    // 8. Send withdrawal initiation email (non-blocking)
+    // ---------------------------------------------------------------------
     const user = await User.findById(req.user.id);
-    
-    // Send withdrawal request email
-    try {
-      await sendWithdrawalRequestEmail(
-        user.email,
-        user.firstName,
-        investment.amount,
-        profit,
-        withdrawalDetails
-      );
-    } catch (error) {
-      console.error('Error sending withdrawal email:', error);
-    }
-    
+
+    sendWithdrawalInitiatedEmail(user, withdrawal)
+      .catch(err => console.error('Withdrawal email failed:', err));
+
+    // ---------------------------------------------------------------------
+    // 9. Response
+    // ---------------------------------------------------------------------
     res.status(201).json({
       success: true,
-      message: 'Withdrawal request submitted successfully. You will receive an email confirmation.',
-      data: withdrawal
+      message: 'Withdrawal request submitted successfully. Email confirmation sent.',
+      data: withdrawal,
     });
+
   } catch (error) {
     console.error('Request withdrawal error:', error);
     res.status(500).json({
       success: false,
       message: 'Error processing withdrawal request',
-      error: error.message
+      error: error.message,
     });
   }
 };
-
 /**
  * @desc    Get all user withdrawals
  * @route   GET /api/withdrawals
