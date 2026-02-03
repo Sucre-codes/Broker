@@ -9,7 +9,7 @@ const paymentController = require('../controllers/paymentController');
 const { protect } = require('../middleware/auth');
 
 
-router.post('payments/initiate',paymentController.initiatePayment)
+router.post('/initiate',protect, paymentController.initiatePayment)
 
 
 // Cryptocurrency routes

@@ -94,8 +94,8 @@ async function main() {
   if (!adminEmail) {
     console.error('❌ ADMIN_EMAIL not set');
     process.exit(1);
-  }
-
+  }        
+    
   await connectDB();
 
   const existing = await User.findOne({ email: adminEmail, isAdmin: true });

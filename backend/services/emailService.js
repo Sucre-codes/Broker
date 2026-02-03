@@ -71,7 +71,7 @@ function wrap(hdrTitle, bodyHtml) {
     <div class="wrap">
       <div class="hdr"><h1>${hdrTitle}</h1></div>
       <div class="body">${bodyHtml}</div>
-      <div class="footer">&copy; ${new Date().getFullYear()} ${process.env.EMAIL_FROM_NAME || 'InvestHub'}. All rights reserved.</div>
+      <div class="footer">&copy; ${new Date().getFullYear()} ${process.env.BREVO_SENDER_NAME}. All rights reserved.</div>
     </div>
   </body></html>`;
 }

@@ -3,7 +3,7 @@
  * Handles all payment processing logic for different payment methods
  */
 
-
+  
 const QRCode       = require('qrcode');
 const Investment   = require('../models/Investment');
 const Transaction  = require('../models/Transaction');

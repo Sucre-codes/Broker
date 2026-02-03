@@ -126,16 +126,21 @@ investmentSchema.statics.getReturnRate = function(plan) {
 // ---------------------------------------------------------------------------
 // Pre-save hook — auto-fill ROI fields for new documents
 // ---------------------------------------------------------------------------
-investmentSchema.pre('save', function(next) {
-  if (this.isNew) {
-    this.annualReturnRate = this.constructor.getReturnRate(this.plan);
-    this.expectedROI      = (this.amount * this.annualReturnRate * this.timeframeWeeks) / 52;
-    const totalDays       = this.timeframeWeeks * 7;
-    this.dailyGrowth      = this.expectedROI / totalDays;
-    this.currentValue     = this.amount;
-    this.endDate          = new Date(this.startDate.getTime() + totalDays * 24 * 60 * 60 * 1000);
-  }
-  next();
+investmentSchema.pre('save', function () {
+  if (!this.isNew) return;
+
+  this.annualReturnRate = this.constructor.getReturnRate(this.plan);
+  this.expectedROI =
+    (this.amount * this.annualReturnRate * this.timeframeWeeks) / 52;
+
+  const totalDays = this.timeframeWeeks * 7;
+
+  this.dailyGrowth  = this.expectedROI / totalDays;
+  this.currentValue = this.amount;
+
+  this.endDate = new Date(
+    this.startDate.getTime() + totalDays * 24 * 60 * 60 * 1000
+  );
 });
 
 // ---------------------------------------------------------------------------
