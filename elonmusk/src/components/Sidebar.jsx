@@ -4,17 +4,17 @@ import {
   FaChartLine,
   FaWallet,
   FaHistory,
+  FaClipboardList,
   FaSignOutAlt,
   FaUser,
   FaTrophy,
   FaTimes,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
-import logo from "../assets/logoofcompany.png";
+import logo from "../assets/brandmark.svg";
 
 const Sidebar = ({ isOpen, onClose }) => {
-  const { logout } = useAuth();
-
+   const { logout, user } = useAuth();
   return (
     <>
       {/* Overlay (mobile) */}
@@ -58,6 +58,9 @@ const Sidebar = ({ isOpen, onClose }) => {
             <SidebarLink to="/withdrawals" icon={<FaWallet />} label="Withdrawals" />
             <SidebarLink to="/transactions" icon={<FaHistory />} label="Transactions" />
             <SidebarLink to="/profile" icon={<FaUser />} label="Profile" />
+            {user?.isAdmin && (
+              <SidebarLink to="/admin" icon={<FaClipboardList />} label="Admin Dashboard" />
+            )}
           </nav>
 
           {/* Logout */}

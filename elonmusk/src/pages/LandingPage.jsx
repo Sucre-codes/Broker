@@ -22,7 +22,7 @@ import deepmindBg from "../assets/deepmind.jpg";
 import boringBg from "../assets/boring.jpg";
 import neuralinkBg from "../assets/neuralink.jpg";
  import ctaBg from "../assets/cta.jpg";
- import logo from '../assets/logoofcompany.png'
+ import logo from '../assets/brandmark.svg'
 
 const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);

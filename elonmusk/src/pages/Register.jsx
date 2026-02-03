@@ -5,7 +5,7 @@ import { FaRocket, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-i
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import authBg from "../assets/authbg.jpg";
-import logo from "../assets/logoofcompany.png";
+import logo from "../assets/brandmark.svg";
 
 const Register = () => {
   const navigate = useNavigate();

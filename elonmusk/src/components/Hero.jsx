@@ -90,7 +90,9 @@ export default function Hero() {
             <Link to="/register" className="btn-primary">
               Start Investing Now
             </Link>
-            <button className="btn-neon">Learn More</button>
+            <Link to="/about" className="btn-neon">
+              Learn More
+            </Link>
           </motion.div>
         </motion.div>
       </div>

@@ -9,11 +9,9 @@ import {
   FaBrain, 
   FaNetworkWired,
   FaCheck,
-  FaCreditCard,
   FaBitcoin,
   FaUniversity
 } from 'react-icons/fa';
-import { SiPaypal } from 'react-icons/si';
 import { investmentAPI, paymentAPI } from '../utils/api';
 import { toast } from 'react-toastify';
 
@@ -106,20 +104,6 @@ const NewInvestment = () => {
   // Payment Methods
   const paymentMethods = [
     {
-      value: 'stripe',
-      name: 'Credit/Debit Card',
-      icon: FaCreditCard,
-      description: 'Instant payment via Stripe',
-      instant: true
-    },
-    {
-      value: 'paypal',
-      name: 'PayPal',
-      icon: SiPaypal,
-      description: 'Pay with your PayPal account',
-      instant: true
-    },
-    {
       value: 'crypto',
       name: 'Cryptocurrency',
       icon: FaBitcoin,
@@ -188,36 +172,21 @@ const NewInvestment = () => {
     setLoading(true);
     try {
       // Create payment based on method
-      if (formData.paymentMethod === 'stripe') {
-        const response = await paymentAPI.createStripeIntent({
-          amount: parseFloat(formData.amount),
-          assetType: formData.assetType,
-          plan: formData.plan,
-          timeframeWeeks: parseInt(formData.timeframeWeeks)
-        });
-        
-        // In real app, redirect to Stripe checkout
-        toast.success('Redirecting to payment...');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
-      } else if (formData.paymentMethod === 'paypal') {
-        const response = await paymentAPI.createPayPalOrder({
-          amount: parseFloat(formData.amount),
-          assetType: formData.assetType,
-          plan: formData.plan,
-          timeframeWeeks: parseInt(formData.timeframeWeeks)
-        });
-        
-        toast.success('Redirecting to PayPal...');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
-      } else if (formData.paymentMethod === 'crypto') {
-        navigate('/payment/crypto', { state: formData });
-      } else if (formData.paymentMethod === 'wire') {
-        navigate('/payment/wire', { state: formData });
-      }
+      const response = await paymentAPI.initiatePayment({
+        amount: parseFloat(formData.amount),
+        assetType: formData.assetType,
+        plan: formData.plan,
+        timeframeWeeks: parseInt(formData.timeframeWeeks),
+        paymentMethod: formData.paymentMethod
+      });
+      
+      toast.success(response.data.message || 'Investment initiated. Awaiting payment details.');
+      navigate(`/payment/pending/${response.data.data.investmentId}`, {
+        state: {
+          investmentId: response.data.data.investmentId,
+          summary: { ...formData }
+        }
+      });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Payment failed');
     } finally {

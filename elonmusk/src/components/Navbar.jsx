@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "../assets/logoofcompany.png";
+import logo from "../assets/brandmark.svg";
 
 /**
  * Detect mobile without Tailwind breakpoints

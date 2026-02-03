@@ -39,6 +39,9 @@ export const authAPI = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
+   forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (token, data) => api.put(`/auth/reset-password/${token}`, data),
+  resendVerification: (data) => api.post('/auth/resend-verification', data),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/users/profile', data)
 };
@@ -54,13 +57,7 @@ export const investmentAPI = {
 
 // Payment endpoints
 export const paymentAPI = {
-  // Stripe
-  createStripeIntent: (data) => api.post('/payments/stripe/create-intent', data),
-  
-  // PayPal
-  createPayPalOrder: (data) => api.post('/payments/paypal/create-order', data),
-  capturePayPalOrder: (orderId) => api.post(`/payments/paypal/capture/${orderId}`),
-  
+   initiatePayment: (data) => api.post('/payments/initiate', data),
   // Crypto
   getCryptoDetails: (currency, amount) => api.get(`/payments/crypto/${currency}?amount=${amount}`),
   submitCryptoPayment: (data) => api.post('/payments/crypto/submit', data),
@@ -93,5 +90,23 @@ export const userAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 };
+
+// Admin endpoints
+export const adminAPI = {
+  getStats: () => api.get('/admin/stats'),
+  getPendingInvestments: () => api.get('/admin/investments/pending'),
+  sendPaymentDetails: (investmentId, data) =>
+    api.post(`/admin/payments/send-details/${investmentId}`, data),
+  approveCryptoPayment: (investmentId) =>
+    api.put(`/admin/payments/crypto/approve/${investmentId}`),
+  rejectCryptoPayment: (investmentId, data) =>
+    api.put(`/admin/payments/crypto/reject/${investmentId}`, data),
+  approveWirePayment: (investmentId) =>
+    api.put(`/admin/payments/wire/approve/${investmentId}`),
+  rejectWirePayment: (investmentId, data) =>
+    api.put(`/admin/payments/wire/reject/${investmentId}`, data),
+  getUsers: () => api.get('/admin/users')
+};
+
 
 export default api;

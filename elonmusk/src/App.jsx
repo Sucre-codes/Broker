@@ -8,6 +8,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import NewInvestment from './pages/NewInvestment';
 import Investments from './pages/Investments';
@@ -15,6 +18,9 @@ import InvestmentDetails from './pages/InvestmentDetails';
 import Withdrawals from './pages/Withdrawals';
 import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
+import PaymentPending from './pages/PaymentPending';
+import AdminDashboard from './pages/AdminDashboard';
+import About from './pages/AboutPage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -45,6 +51,24 @@ const PublicRoute = ({ children }) => {
 
   return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-space">
+        <div className="loading"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return user?.isAdmin ? children : <Navigate to="/dashboard" />;
+};
 
 function AppRoutes() {
   return (
@@ -65,6 +89,38 @@ function AppRoutes() {
         element={
           <PublicRoute>
             <Register />
+          </PublicRoute>
+        }
+      />
+         <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/reset-password/:token"
+        element={
+          <PublicRoute>
+            <ResetPassword />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/verify-email/:token"
+        element={
+          <PublicRoute>
+            <VerifyEmail />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/about"
+        element={
+          <PublicRoute>
+            <About />
           </PublicRoute>
         }
       />
@@ -103,6 +159,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/payment/pending/:investmentId"
+        element={
+          <ProtectedRoute>
+            <PaymentPending />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/withdrawals"
         element={
           <ProtectedRoute>
@@ -124,6 +188,14 @@ function AppRoutes() {
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
+        }
+      />
+       <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
         }
       />
 
