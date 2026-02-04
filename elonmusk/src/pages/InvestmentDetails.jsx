@@ -95,6 +95,18 @@ const InvestmentDetails = () => {
     return gradients[assetType] || 'from-neon-blue to-neon-purple';
   };
 
+   const formatStatus = (status) => {
+    const labels = {
+      awaiting_payment: 'awaiting payment',
+      pending: 'pending',
+      active: 'active',
+      completed: 'completed',
+      withdrawn: 'withdrawn',
+      rejected: 'rejected'
+    };
+    return labels[status] || status.replace('_', ' ');
+  };
+
   const generateChartData = () => {
     if (!investment) return [];
     
@@ -146,7 +158,7 @@ const InvestmentDetails = () => {
   const progress = Math.min(100, ((new Date() - new Date(investment.startDate)) / (new Date(investment.endDate) - new Date(investment.startDate)) * 100));
   const canWithdraw = differenceInDays(new Date(), new Date(investment.startDate)) >= 7;
   const chartData = generateChartData();
-
+  const isPending = investment.status === 'pending' || investment.status === 'awaiting_payment';
   return (
     <div className="min-h-screen bg-gradient-space">
       {/* Background */}
@@ -163,7 +175,7 @@ const InvestmentDetails = () => {
             Back to Dashboard
           </Link>
 
-          <div className="flex items-center space-x-6">
+           <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-6 gap-4">
             <div className={`w-20 h-20 bg-gradient-to-br ${gradient} rounded-2xl flex items-center justify-center`}>
               <Icon className="text-4xl text-white" />
             </div>
@@ -172,11 +184,33 @@ const InvestmentDetails = () => {
                 <span className="gradient-text">{investment.assetType}</span>
               </h1>
               <p className="text-white/70 text-lg capitalize">
-                {investment.plan} Plan • {investment.status}
+                {investment.plan} Plan • {formatStatus(investment.status)}
               </p>
             </div>
           </div>
         </div>
+         {isPending && (
+          <motion.div
+            className="glass-card p-5 sm:p-6 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-display font-bold mb-2">Payment Action Required</h2>
+                <p className="text-white/70 text-sm">
+                  {investment.adminDetails
+                    ? 'Your payment details are ready. Submit your proof to activate this investment.'
+                    : 'We are preparing your payment details. Check back soon for transfer instructions.'}
+                </p>
+              </div>
+              <Link to={`/payment/pending/${investment._id}`} className="btn-neon text-sm px-4 py-2 text-center">
+                {investment.adminDetails ? 'Complete Payment' : 'View Status'}
+              </Link>
+            </div>
+          </motion.div>
+        )}
+
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}

@@ -21,7 +21,7 @@ const Investments = () => {
   const navigate = useNavigate();
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, active, completed, withdrawn
+  const [filter, setFilter] = useState('all'); // all, active, completed, withdrawn, pending
 
   useEffect(() => {
     fetchInvestments();
@@ -64,13 +64,31 @@ const Investments = () => {
     const badges = {
       active: 'bg-green-400/20 text-green-400 border-green-400/30',
       completed: 'bg-blue-400/20 text-blue-400 border-blue-400/30',
-      withdrawn: 'bg-purple-400/20 text-purple-400 border-purple-400/30'
+      withdrawn: 'bg-purple-400/20 text-purple-400 border-purple-400/30',
+      pending: 'bg-yellow-400/20 text-yellow-400 border-yellow-400/30',
+      awaiting_payment: 'bg-orange-400/20 text-orange-400 border-orange-400/30',
+      rejected: 'bg-red-400/20 text-red-400 border-red-400/30'
     };
     return badges[status] || 'bg-gray-400/20 text-gray-400 border-gray-400/30';
   };
 
+  const formatStatus = (status) => {
+    const labels = {
+      awaiting_payment: 'awaiting payment',
+      pending: 'pending',
+      active: 'active',
+      completed: 'completed',
+      withdrawn: 'withdrawn',
+      rejected: 'rejected'
+    };
+    return labels[status] || status.replace('_', ' ');
+  };
+
   const filteredInvestments = investments.filter(inv => {
     if (filter === 'all') return true;
+     if (filter === 'pending') {
+      return inv.status === 'pending' || inv.status === 'awaiting_payment';
+    }
     return inv.status === filter;
   });
 
@@ -227,6 +245,16 @@ const Investments = () => {
             >
               Withdrawn ({investments.filter(i => i.status === 'withdrawn').length})
             </button>
+            <button
+              onClick={() => setFilter('pending')}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                filter === 'pending'
+                  ? 'bg-gradient-to-r from-neon-blue to-neon-purple text-white'
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Pending ({investments.filter(i => i.status === 'pending' || i.status === 'awaiting_payment').length})
+            </button>
           </div>
         </div>
 
@@ -236,6 +264,7 @@ const Investments = () => {
             {filteredInvestments.map((investment, index) => {
               const Icon = getCompanyIcon(investment.assetType);
               const gradient = getCompanyGradient(investment.assetType);
+               const isPending = investment.status === 'pending' || investment.status === 'awaiting_payment';
               const profit = investment.currentValue - investment.amount;
               const profitPercentage = (profit / investment.amount * 100).toFixed(2);
               const daysElapsed = differenceInDays(new Date(), new Date(investment.startDate));
@@ -257,7 +286,7 @@ const Investments = () => {
                       <Icon className="text-2xl text-white" />
                     </div>
                     <div className={`px-3 py-1 rounded-full border text-xs font-semibold ${getStatusBadge(investment.status)}`}>
-                      {investment.status}
+                      {formatStatus(investment.status)}
                     </div>
                   </div>
 
@@ -284,6 +313,23 @@ const Investments = () => {
                       {profit >= 0 ? '+' : ''}${profit.toFixed(2)} ({profitPercentage}%)
                     </p>
                   </div>
+
+                  {isPending && (
+                    <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3">
+                      <p className="text-xs text-white/60 mb-2">
+                        {investment.adminDetails
+                          ? 'Payment details are ready. Submit your proof to activate this investment.'
+                          : 'We are preparing your payment details. You can check back anytime.'}
+                      </p>
+                      <Link
+                        to={`/payment/pending/${investment._id}`}
+                        onClick={(event) => event.stopPropagation()}
+                        className="btn-neon inline-flex items-center text-xs px-4 py-2"
+                      >
+                        {investment.adminDetails ? 'Complete Payment' : 'View Status'}
+                      </Link>
+                    </div>
+                  )}
 
                   {/* Progress */}
                   <div>

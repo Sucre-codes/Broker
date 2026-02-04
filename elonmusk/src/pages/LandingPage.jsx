@@ -107,7 +107,7 @@ const companies = [
     {
       icon: FaClock,
       title: 'Flexible Terms',
-      description: 'Invest from 1 week onwards with amounts starting at just $10'
+      description: 'Invest from 1 week onwards with amounts starting at just $100'
     },
     {
       icon: FaGlobe,
@@ -315,7 +315,7 @@ const companies = [
             transition={{ delay: 0.5, duration: 0.8 }}
           >
             <p className="text-white/70 mb-6">
-              Minimum investment: $10 USD • Minimum duration: 1 week
+              Minimum investment: $100 USD • Minimum duration: 1 week
             </p>
             <Link to="/register" className="btn-primary inline-flex items-center group">
               Start Your Journey
@@ -353,7 +353,7 @@ const companies = [
 
       <p className="text-base md:text-2xl text-white/80 mb-10 leading-relaxed">
         Join thousands of investors who are funding the technologies that will
-        define our civilization's next chapter. Start with as little as $10.
+        define our civilization's next chapter. Start with as little as $100.
       </p>
 
       <Link

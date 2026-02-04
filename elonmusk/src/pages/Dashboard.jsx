@@ -22,13 +22,14 @@ import { investmentAPI } from '../utils/api';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import Sidebar from "../components/Sidebar";
-import logo from "../assets/logoofcompany.png";
+import logo from "../assets/brandmark.svg";
 
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
+  const [pendingInvestments, setPendingInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -39,8 +40,15 @@ const Dashboard = () => {
 
   const fetchDashboardStats = async () => {
     try {
-      const response = await investmentAPI.getDashboardStats();
-      setStats(response.data.data);
+       const [statsResponse, investmentsResponse] = await Promise.all([
+        investmentAPI.getDashboardStats(),
+        investmentAPI.getAll()
+      ]);
+      setStats(statsResponse.data.data);
+      const pending = investmentsResponse.data.data.filter(
+        (investment) => investment.status === 'pending' || investment.status === 'awaiting_payment'
+      );
+      setPendingInvestments(pending);
     } catch (error) {
       console.error('Error fetching stats:', error);
       toast.error('Failed to load dashboard data');
@@ -215,6 +223,48 @@ const Dashboard = () => {
             </motion.div>
           </div>
 
+                {pendingInvestments.length > 0 && (
+            <motion.div
+              className="glass-card p-5 sm:p-6 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl sm:text-2xl font-display font-bold">Pending Payments</h2>
+                <Link to="/investments" className="text-neon-blue hover:text-neon-purple transition-colors text-sm font-semibold">
+                  View All →
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {pendingInvestments.map((investment) => (
+                  <div
+                    key={investment._id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-white/10 bg-white/5 p-4"
+                  >
+                    <div>
+                      <p className="font-semibold text-white">{investment.assetType}</p>
+                      <p className="text-sm text-white/60 capitalize">
+                        {investment.plan} plan · {investment.paymentMethod}
+                      </p>
+                      <p className="text-xs text-white/50">
+                        Status: {investment.status === 'awaiting_payment' ? 'Awaiting payment' : 'Pending details'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Link to={`/payment/pending/${investment._id}`} className="btn-neon text-sm px-4 py-2 text-center">
+                        {investment.adminDetails ? 'Complete Payment' : 'View Status'}
+                      </Link>
+                      <Link to={`/investments/${investment._id}`} className="btn-secondary text-sm px-4 py-2 text-center">
+                        Details
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Recent Investments */}
           <motion.div
             className="glass-card p-5 sm:p-6"
@@ -244,7 +294,7 @@ const Dashboard = () => {
                       whileHover={{ scale: 1.01 }}
                       onClick={() => navigate(`/investments/${investment._id}`)}
                     >
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center space-x-4">
                           <div className={`w-14 h-14 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                             <Icon className="text-white text-xl" />
