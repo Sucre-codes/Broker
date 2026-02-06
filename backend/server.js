@@ -26,7 +26,7 @@ app.use(helmet());
 const allowedOrigins = [
   'http://localhost:5173/',
   'https://themuskfoundations.com',
-  'https://elonfather.netlify.app'
+  'https://broker-two-bay.vercel.app/'
 ];
 
  app.use(cors(
@@ -42,7 +42,7 @@ const allowedOrigins = [
   },
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization','X-Requested-With'],
-  
+
 }                
 ));                                                     
 
