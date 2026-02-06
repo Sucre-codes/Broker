@@ -24,15 +24,14 @@ initSocket(server);
 app.use(helmet());
 
 const allowedOrigins = [
-  'http://http://localhost:5173/',
-  'http://themuskfoundations.com',
+  'http://localhost:5173/',
+  'https://themuskfoundations.com',
   'https://elonfather.netlify.app'
 ];
 
  app.use(cors(
 {
   origin: function (origin, callback) {
-    // allow requests with no origin (Postman, mobile apps)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -42,6 +41,8 @@ const allowedOrigins = [
     }
   },
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization','X-Requested-With'],
+  
 }                
 ));                                                     
 

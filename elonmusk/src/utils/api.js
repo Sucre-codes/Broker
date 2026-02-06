@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+
+ const apiBaseUrl = 'https://elonfather.onrender.com/api';
+    const BaseUrl = apiBaseUrl;
+
 const api = axios.create({
-  baseURL: import.meta.env.API_URL,
+  baseURL: BaseUrl,
   headers: {
     'Content-Type': 'application/json'
   }

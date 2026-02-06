@@ -72,10 +72,13 @@ const PaymentPending = () => {
       return undefined;
     }
 
-    const socket = socketClient(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000', {
+    const apiBaseUrl = 'https://elonfather.onrender.com/api';
+    const socketBaseUrl = apiBaseUrl;
+    const socketOptions = {
       auth: { token },
       transports: ['websocket', 'polling']
-    });
+    };
+    const socket = socketBaseUrl ? socketClient(socketBaseUrl, socketOptions) : socketClient(socketOptions);
 
     socket.on('payment_details_ready', (payload) => {
       if (payload?.investmentId !== investmentId) {
