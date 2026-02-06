@@ -72,7 +72,7 @@ const PaymentPending = () => {
       return undefined;
     }
 
-    const apiBaseUrl = 'https://elonfather.onrender.com/api';
+    const apiBaseUrl = 'https://broker-gc0x.onrender.com/api';
     const socketBaseUrl = apiBaseUrl;
     const socketOptions = {
       auth: { token },
