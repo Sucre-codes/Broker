@@ -7,16 +7,16 @@ const User = require('../models/User');
  * @desc    Create new investment
  * @route   POST /api/investments
  * @access  Private
- */
+ */ 
 exports.createInvestment = async (req, res) => {
   try {
     const { assetType, plan, amount, timeframeWeeks, paymentMethod, transactionId } = req.body;
     
     // Validate minimum amount
-    if (amount < 100) {
+    if (amount < 500) {
       return res.status(400).json({
         success: false,
-        message: 'Minimum investment amount is $100'
+        message: 'Minimum investment amount is $500'
       });
     }
     
@@ -24,7 +24,7 @@ exports.createInvestment = async (req, res) => {
     if (timeframeWeeks < 1) {
       return res.status(400).json({
         success: false,
-        message: 'Minimum investment period is 1 weeks'
+        message: 'Minimum investment period is 1 week'
       });
     }
     
@@ -40,13 +40,13 @@ exports.createInvestment = async (req, res) => {
       timeframeWeeks,
       paymentMethod,
       transactionId,
-      paymentStatus: 'completed', // In production, this would be set based on actual payment confirmation
-      autoCompound: user.autoCompound
+      paymentStatus: 'completed',
+      autoCompound: user.autoCompound || false
     });
     
     // Update user's total invested
-    user.totalInvested += amount;
-    user.currentBalance += amount;
+    user.totalInvested = (user.totalInvested || 0) + amount;
+    user.currentBalance = (user.currentBalance || 0) + amount;
     await user.save();
     
     // Create transaction record
@@ -179,37 +179,45 @@ exports.getDashboardStats = async (req, res) => {
     for (let investment of investments) {
       if (investment.status === 'active') {
         activeInvestments++;
-        investment.updateCurrentValue();
-        await investment.save();
         
+        // Update current value
+        investment.updateCurrentValue();
+        
+        // Add to totals
         totalInvested += investment.amount;
         currentBalance += investment.currentValue;
         totalReturns += (investment.currentValue - investment.amount);
+        
+        // Save updated investment
+        await investment.save();
       } else if (investment.status === 'completed') {
         totalInvested += investment.amount;
         const finalValue = investment.amount + investment.expectedROI;
+        currentBalance += finalValue;
         totalReturns += investment.expectedROI;
       }
     }
     
     // Update user's totals
     const user = await User.findById(req.user.id);
-    user.totalInvested = totalInvested;
-    user.currentBalance = currentBalance;
-    user.totalReturns = totalReturns;
-    await user.save();
+    if (user) {
+      user.totalInvested = totalInvested;
+      user.currentBalance = currentBalance;
+      user.totalReturns = totalReturns;
+      await user.save();
+    }
     
-    // Get recent investments
+    // Get recent investments (last 5)
     const recentInvestments = investments
-      .sort((a, b) => b.createdAt - a.createdAt)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
     
     res.status(200).json({
       success: true,
       data: {
-        totalInvested,
-        currentBalance,
-        totalReturns,
+        totalInvested: totalInvested.toFixed(2),
+        currentBalance: currentBalance.toFixed(2),
+        totalReturns: totalReturns.toFixed(2),
         activeInvestments,
         totalInvestments: investments.length,
         recentInvestments
@@ -234,11 +242,34 @@ exports.calculateInvestment = async (req, res) => {
   try {
     const { plan, amount, timeframeWeeks } = req.body;
     
-    // Get return rate for plan
-    const annualReturnRate = Investment.getReturnRate(plan);
+    // Validate inputs
+    if (!plan || !amount || !timeframeWeeks) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide plan, amount, and timeframeWeeks'
+      });
+    }
+
+    if (amount < 500) {
+      return res.status(400).json({
+        success: false,
+        message: 'Minimum investment amount is $500'
+      });
+    }
+
+    if (timeframeWeeks < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Minimum investment period is 1 week'
+      });
+    }
     
-    // Calculate expected ROI
-    const expectedROI = (amount * annualReturnRate * timeframeWeeks) / 52;
+    // Get weekly return rate
+    const weeklyReturnRate = Investment.getWeeklyReturnRate(plan);
+    
+    // Calculate using weekly rate formula
+    // Formula: amount × weeklyReturnRate × timeframeWeeks
+    const expectedROI = amount * weeklyReturnRate * timeframeWeeks;
     
     // Calculate daily growth
     const totalDays = timeframeWeeks * 7;
@@ -246,17 +277,17 @@ exports.calculateInvestment = async (req, res) => {
     
     // Calculate end date
     const endDate = new Date();
-    endDate.setDate(endDate.getDate() + (timeframeWeeks * 7));
+    endDate.setDate(endDate.getDate() + totalDays);
     
     res.status(200).json({
       success: true,
       data: {
-        amount,
+        amount: parseFloat(amount).toFixed(2),
         plan,
         timeframeWeeks,
-        annualReturnRate: (annualReturnRate * 100).toFixed(2) + '%',
+        weeklyReturnRate: (weeklyReturnRate * 100).toFixed(0) + '%',
         expectedROI: expectedROI.toFixed(2),
-        totalReturn: (amount + expectedROI).toFixed(2),
+        totalReturn: (parseFloat(amount) + expectedROI).toFixed(2),
         dailyGrowth: dailyGrowth.toFixed(2),
         endDate
       }

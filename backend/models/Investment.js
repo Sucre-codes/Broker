@@ -30,7 +30,7 @@ const investmentSchema = new mongoose.Schema({
   amount: {
     type: Number,
     required: [true, 'Please provide investment amount'],
-    min: [100, 'Minimum investment is $100']
+    min: [500, 'Minimum investment is $500']
   },
 
   // Timeframe in weeks
@@ -41,7 +41,7 @@ const investmentSchema = new mongoose.Schema({
   },
 
   // ROI Calculation
-  annualReturnRate: { type: Number, required: true },
+  weeklyReturnRate: { type: Number, required: true },
   expectedROI:      { type: Number, required: true },
   currentValue:     { type: Number, required: true },
   dailyGrowth:      { type: Number, required: true },
@@ -109,18 +109,27 @@ const investmentSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // ---------------------------------------------------------------------------
-// Static: return rate for a plan
+// Static method — Get WEEKLY return rate based on plan
+// ---------------------------------------------------------------------------
+investmentSchema.statics.getWeeklyReturnRate = function(plan) {
+  const weeklyRates = {
+    starter:  1.20,   // 120% return per week
+    silver:   1.50,   // 150% return per week
+    gold:     3.00,   // 300% return per week
+    platinum: 4.00,   // 400% return per week
+  };
+  
+  const rate = weeklyRates[plan];
+  if (rate === undefined) throw new Error(`Unknown plan: ${plan}`);
+  
+  return rate;
+};
+
+// ---------------------------------------------------------------------------
+// BACKWARD COMPATIBILITY: Keep old method name as alias
 // ---------------------------------------------------------------------------
 investmentSchema.statics.getReturnRate = function(plan) {
-  const rates = {
-    starter:  { min: 0.08, max: 0.12 },   // 8-12 %
-    silver:   { min: 0.15, max: 0.20 },   // 15-20 %
-    gold:     { min: 0.25, max: 0.35 },   // 25-35 %
-    platinum: { min: 0.40, max: 0.50 },   // 40-50 %
-  };
-  const rate = rates[plan];
-  if (!rate) throw new Error(`Unknown plan: ${plan}`);
-  return (rate.min + rate.max) / 2;
+  return this.getWeeklyReturnRate(plan);
 };
 
 // ---------------------------------------------------------------------------
@@ -129,18 +138,29 @@ investmentSchema.statics.getReturnRate = function(plan) {
 investmentSchema.pre('save', function () {
   if (!this.isNew) return;
 
-  this.annualReturnRate = this.constructor.getReturnRate(this.plan);
-  this.expectedROI =
-    (this.amount * this.annualReturnRate * this.timeframeWeeks) / 52;
+  try {
+    // Get weekly return rate (as decimal multiplier)
+    this.weeklyReturnRate = this.constructor.getWeeklyReturnRate(this.plan);
+    
+    // Calculate expected ROI based on investment amount, weekly rate, and timeframe
+    // Formula: amount × weeklyReturnRate × timeframeWeeks
+    this.expectedROI = this.amount * this.weeklyReturnRate * this.timeframeWeeks;
 
-  const totalDays = this.timeframeWeeks * 7;
+    const totalDays = this.timeframeWeeks * 7;
 
-  this.dailyGrowth  = this.expectedROI / totalDays;
-  this.currentValue = this.amount;
+    // Daily growth = total ROI spread across all days
+    this.dailyGrowth = this.expectedROI / totalDays;
+    
+    // Starting value = initial investment
+    this.currentValue = this.amount;
 
-  this.endDate = new Date(
-    this.startDate.getTime() + totalDays * 24 * 60 * 60 * 1000
-  );
+    // Calculate end date based on total days
+    this.endDate = new Date(
+      this.startDate.getTime() + totalDays * 24 * 60 * 60 * 1000
+    );
+  } catch (error) {
+    next(error);
+  }
 });
 
 // ---------------------------------------------------------------------------

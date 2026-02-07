@@ -18,8 +18,8 @@ const emailService = require('./emailService');
 // ===========================================================================
 exports.initiatePayment = async ({ userId, amount, assetType, plan, timeframeWeeks, paymentMethod }) => {
   // Pre-calculate ROI fields (same formula used everywhere)
-  const annualReturnRate = Investment.getReturnRate(plan);
-  const expectedROI      = (amount * annualReturnRate * timeframeWeeks) / 52;
+  const weeklyReturnRate = Investment.getReturnRate(plan);
+  const expectedROI      = (amount * weeklyReturnRate * timeframeWeeks) / 52;
   const totalDays        = timeframeWeeks * 7;
   const dailyGrowth      = expectedROI / totalDays;
   const startDate        = new Date();
@@ -35,7 +35,7 @@ exports.initiatePayment = async ({ userId, amount, assetType, plan, timeframeWee
     paymentMethod,
     paymentStatus:    'pending',
     status:           'pending',
-    annualReturnRate,
+    weeklyReturnRate,
     expectedROI,
     dailyGrowth,
     currentValue:     amount,
@@ -188,8 +188,8 @@ exports.getCryptoPaymentDetails = async (currency, amount) => {
 exports.submitCryptoPayment = async (cryptoData) => {
   const { userId, assetType, plan, amount, timeframeWeeks, currency, transactionHash } = cryptoData;
 
-  const annualReturnRate = Investment.getReturnRate(plan);
-  const expectedROI      = (amount * annualReturnRate * timeframeWeeks) / 52;
+  const weeklyReturnRate = Investment.getReturnRate(plan);
+  const expectedROI      = (amount * weeklyReturnRate * timeframeWeeks) / 52;
   const totalDays        = timeframeWeeks * 7;
   const dailyGrowth      = expectedROI / totalDays;
   const startDate        = new Date();
@@ -204,7 +204,7 @@ exports.submitCryptoPayment = async (cryptoData) => {
       startDate, endDate, dailyGrowth,
       currentValue:    amount,
       expectedROI,
-      annualReturnRate,
+      weeklyReturnRate,
       status:          'pending',
     });
 
@@ -259,8 +259,8 @@ exports.getWireTransferDetails = () => ({
 exports.submitWireTransfer = async (wireData) => {
   const { userId, assetType, plan, amount, timeframeWeeks, referenceNumber, senderBank, senderName } = wireData;
 
-  const annualReturnRate = Investment.getReturnRate(plan);
-  const expectedROI      = (amount * annualReturnRate * timeframeWeeks) / 52;
+  const weeklyReturnRate = Investment.getReturnRate(plan);
+  const expectedROI      = (amount * weeklyReturnRate * timeframeWeeks) / 52;
   const totalDays        = timeframeWeeks * 7;
   const dailyGrowth      = expectedROI / totalDays;
   const startDate        = new Date();
@@ -272,7 +272,7 @@ exports.submitWireTransfer = async (wireData) => {
       paymentMethod:   'wire',
       paymentStatus:   'pending',
       transactionId:   referenceNumber,
-      annualReturnRate, expectedROI, dailyGrowth,
+      weeklyReturnRate, expectedROI, dailyGrowth,
       currentValue:    amount,
       startDate, endDate,
       status:          'pending',
@@ -307,8 +307,8 @@ exports.processSuccessfulPayment = async (paymentData) => {
     const user = await User.findById(userId);
     if (!user) throw new Error('User not found');
 
-    const annualReturnRate = Investment.getReturnRate(plan);
-    const expectedROI      = (amount * annualReturnRate * timeframeWeeks) / 52;
+    const weeklyReturnRate = Investment.getReturnRate(plan);
+    const expectedROI      = (amount * weeklyReturnRate * timeframeWeeks) / 52;
     const totalDays        = timeframeWeeks * 7;
     const dailyGrowth      = expectedROI / totalDays;
     const startDate        = new Date();
@@ -318,7 +318,7 @@ exports.processSuccessfulPayment = async (paymentData) => {
       user: userId, assetType, plan, amount, timeframeWeeks,
       paymentMethod, paymentStatus: 'completed', transactionId,
       autoCompound: user.autoCompound,
-      annualReturnRate, expectedROI, dailyGrowth,
+      weeklyReturnRate, expectedROI, dailyGrowth,
       currentValue: amount,
       startDate, endDate,
       status: 'active',
