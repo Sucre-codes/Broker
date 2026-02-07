@@ -219,7 +219,7 @@ const About = () => {
                 </p>
               </div>
               <Link to="/register" className="btn-primary inline-flex items-center">
-                Start with $100
+                Start with $500
                 <FaArrowRight className="ml-3" />
               </Link>
             </div>

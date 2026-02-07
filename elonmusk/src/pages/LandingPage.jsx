@@ -2,11 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  FaRocket, 
-  FaBolt, 
-  FaBrain, 
-  FaCar,
-  FaNetworkWired,
   FaArrowRight,
   FaChartLine,
   FaShieldAlt,
@@ -68,25 +63,25 @@ const companies = [
  const plans = [
   { 
     name: "Starter",
-    rate: "8-12%",
+    rate: "120%",
     color: "bg-gray-100 border border-gray-300 text-gray-900",
     features: ["Perfect for beginners", "Low risk", "Stable returns"]
   },
   { 
     name: "Silver",
-    rate: "15-20%",
+    rate: "150%",
     color: "bg-gradient-to-br from-gray-200 to-gray-300 text-gray-900",
     features: ["Growing portfolio", "Medium risk", "Balanced growth"]
   },
   { 
     name: "Gold",
-    rate: "25-35%",
+    rate: "300%",
     color: "bg-gradient-to-br from-yellow-300 to-yellow-500 text-gray-900",
     features: ["High performance", "Higher returns", "Premium access"]
   },
   { 
     name: "Platinum",
-    rate: "40-50%",
+    rate: "400%",
     color: "bg-gradient-to-br from-purple-400 to-pink-500 text-white",
     features: ["Maximum returns", "Exclusive benefits", "VIP treatment"]
   }
@@ -107,7 +102,7 @@ const companies = [
     {
       icon: FaClock,
       title: 'Flexible Terms',
-      description: 'Invest from 1 week onwards with amounts starting at just $100'
+      description: 'Invest from 1 week onwards with amounts starting at just $500'
     },
     {
       icon: FaGlobe,
@@ -315,7 +310,7 @@ const companies = [
             transition={{ delay: 0.5, duration: 0.8 }}
           >
             <p className="text-white/70 mb-6">
-              Minimum investment: $100 USD • Minimum duration: 1 week
+              Minimum investment: $500 USD • Minimum duration: 1 week
             </p>
             <Link to="/register" className="btn-primary inline-flex items-center group">
               Start Your Journey
@@ -353,7 +348,7 @@ const companies = [
 
       <p className="text-base md:text-2xl text-white/80 mb-10 leading-relaxed">
         Join thousands of investors who are funding the technologies that will
-        define our civilization's next chapter. Start with as little as $100.
+        define our civilization's next chapter. Start with as little as $500.
       </p>
 
       <Link

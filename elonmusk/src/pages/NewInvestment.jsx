@@ -68,26 +68,29 @@ const NewInvestment = () => {
     }
   ];
 
-  // Plans
+  // ✅ FIXED: Updated plans with WEEKLY return rates
   const plans = [
     { 
       value: 'starter', 
       name: 'Starter', 
-      rate: '8-12%',
+      rate: '120%',
+      weeklyRate: '120% per week',
       features: ['Perfect for beginners', 'Low risk', 'Stable returns'],
       color: 'from-gray-400 to-gray-600'
     },
     { 
       value: 'silver', 
       name: 'Silver', 
-      rate: '15-20%',
+      rate: '150%',
+      weeklyRate: '150% per week',
       features: ['Growing portfolio', 'Medium risk', 'Balanced growth'],
       color: 'from-gray-300 to-gray-500'
     },
     { 
       value: 'gold', 
       name: 'Gold', 
-      rate: '25-35%',
+      rate: '300%',
+      weeklyRate: '300% per week',
       features: ['High performance', 'Higher returns', 'Premium access'],
       color: 'from-yellow-400 to-yellow-600',
       popular: true
@@ -95,7 +98,8 @@ const NewInvestment = () => {
     { 
       value: 'platinum', 
       name: 'Platinum', 
-      rate: '40-50%',
+      rate: '400%',
+      weeklyRate: '400% per week',
       features: ['Maximum returns', 'Exclusive benefits', 'VIP treatment'],
       color: 'from-purple-400 to-pink-600'
     }
@@ -146,8 +150,8 @@ const NewInvestment = () => {
       return;
     }
     if (step === 3) {
-      if (!formData.amount || parseFloat(formData.amount) < 10) {
-        toast.error('Minimum investment is $10');
+      if (!formData.amount || parseFloat(formData.amount) < 500) {
+        toast.error('Minimum investment is $500');
         return;
       }
       if (!formData.timeframeWeeks || parseInt(formData.timeframeWeeks) < 1) {
@@ -218,7 +222,7 @@ const NewInvestment = () => {
 
         {/* Progress Steps */}
         <div className="glass-card mb-8 p-4 sm:p-6">
-  <div className="flex items-center justify-between overflow-x-auto gap-6">
+          <div className="flex items-center justify-between overflow-x-auto gap-6">
             {[
               { num: 1, label: 'Company' },
               { num: 2, label: 'Plan' },
@@ -236,7 +240,7 @@ const NewInvestment = () => {
                     {step > s.num ? <FaCheck /> : s.num}
                   </div>
                   <span className="text-[10px] sm:text-xs text-white/60 mt-2 whitespace-nowrap">
-                  {s.label}
+                    {s.label}
                   </span>
                 </div>
                 {index < 4 && (
@@ -303,10 +307,10 @@ const NewInvestment = () => {
                         </div>
                       )}
                       <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                      <div className="text-3xl font-display font-black mb-4">
+                      <div className="text-3xl font-display font-black mb-2">
                         <span className="gradient-text">{plan.rate}</span>
                       </div>
-                      <p className="text-white/50 text-xs mb-4">Annual Returns</p>
+                      <p className="text-white/50 text-xs mb-4">Weekly Returns</p>
                       <ul className="space-y-2 text-sm">
                         {plan.features.map((feature, i) => (
                           <li key={i} className="flex items-start">
@@ -332,15 +336,15 @@ const NewInvestment = () => {
                     </label>
                     <input
                       type="number"
-                      min="10"
+                      min="500"
                       step="0.01"
                       value={formData.amount}
                       onChange={(e) => setFormData({...formData, amount: e.target.value})}
                       onBlur={calculatePreview}
                       className="w-full px-4 py-3 sm:py-4 text-base sm:text-lg"
-                      placeholder="Minimum $10"
+                      placeholder="Minimum $500"
                     />
-                    <p className="text-white/50 text-sm mt-2">Minimum investment: $10 USD</p>
+                    <p className="text-white/50 text-sm mt-2">Minimum investment: $500 USD</p>
                   </div>
 
                   <div>
@@ -372,6 +376,10 @@ const NewInvestment = () => {
                           <p className="text-2xl font-bold">${preview.amount}</p>
                         </div>
                         <div>
+                          <p className="text-white/60 text-sm">Weekly Return Rate</p>
+                          <p className="text-2xl font-bold text-neon-blue">{preview.weeklyReturnRate}</p>
+                        </div>
+                        <div>
                           <p className="text-white/60 text-sm">Expected ROI</p>
                           <p className="text-2xl font-bold text-green-400">${preview.expectedROI}</p>
                         </div>
@@ -382,6 +390,10 @@ const NewInvestment = () => {
                         <div>
                           <p className="text-white/60 text-sm">Daily Growth</p>
                           <p className="text-2xl font-bold">${preview.dailyGrowth}</p>
+                        </div>
+                        <div>
+                          <p className="text-white/60 text-sm">Duration</p>
+                          <p className="text-2xl font-bold">{formData.timeframeWeeks} week{formData.timeframeWeeks > 1 ? 's' : ''}</p>
                         </div>
                       </div>
                       <div className="mt-4 pt-4 border-t border-white/10">
@@ -448,13 +460,17 @@ const NewInvestment = () => {
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span className="text-white/60">Duration</span>
-                        <span className="font-semibold">{formData.timeframeWeeks} weeks</span>
+                        <span className="font-semibold">{formData.timeframeWeeks} week{formData.timeframeWeeks > 1 ? 's' : ''}</span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                         <span className="text-white/60">Payment Method</span>
                         <span className="font-semibold capitalize">{formData.paymentMethod}</span>
                       </div>
                       <div className="pt-3 border-t border-white/10">
+                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1 mb-2">
+                          <span className="text-white/60">Weekly Return Rate</span>
+                          <span className="font-semibold text-neon-blue">{preview?.weeklyReturnRate}</span>
+                        </div>
                         <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
                           <span className="text-white/60">Expected Returns</span>
                           <span className="font-bold text-green-400 text-lg">${preview?.expectedROI}</span>

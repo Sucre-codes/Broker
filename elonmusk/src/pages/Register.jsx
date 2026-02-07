@@ -174,8 +174,8 @@ const Register = () => {
     <div className="space-y-5">
       {[
         { icon: "🌟", text: "Join 5,000+ future-focused investors" },
-        { icon: "💰", text: "Start investing with just $10" },
-        { icon: "📈", text: "Up to 50% annual returns" },
+        { icon: "💰", text: "Start investing with just $500" },
+        { icon: "📈", text: "Up to 400% annual returns" },
         { icon: "🔒", text: "Bank-level security guaranteed" },
       ].map((item, index) => (
         <motion.div

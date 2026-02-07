@@ -165,7 +165,8 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-4xl font-display font-bold mb-2">
-                  ${stats?.totalInvested?.toFixed(2) || '0.00'}
+                  ${stats?.totalInvested || '0.00'}
+                                    
                 </p>
                 <p className="text-white/50 text-sm">
                   {stats?.activeInvestments || 0} active investments
@@ -189,7 +190,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-4xl font-display font-bold mb-2">
-                  ${stats?.currentBalance?.toFixed(2) || '0.00'}
+                  ${stats?.currentBalance|| '0.00'}
                 </p>
                 <div className="flex items-center text-green-400 text-sm">
                   <FaArrowUp className="mr-1" />
@@ -214,7 +215,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-4xl font-display font-bold mb-2">
-                  ${stats?.totalReturns?.toFixed(2) || '0.00'}
+                  ${stats?.totalReturns || '0.00'}
                 </p>
                 <p className="text-white/50 text-sm">
                   +{((stats?.totalReturns / stats?.totalInvested * 100) || 0).toFixed(2)}% ROI
